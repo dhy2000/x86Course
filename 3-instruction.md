@@ -45,5 +45,74 @@
     MOV  BYTE PTR x, AL     ; 将 8 位的 AL 存入 x 对应的内存
     MOV  WORD PTR [DI], AX  ; 将 AX 中的一个 16 位的字存入 DI 寄存器所指向的内存地址
 
+## 主要指令
+
+- 传送指令
+
+      MOV, XCHG, PUSH, POP, PUSHF, POPF
+      LEA, LDS, LES
+
+  操作符:
+
+      OFFSET, SEG ; 获取变量符号的偏移量和段地址
+      BYTE PTR, WORD PTR, DWORD PTR ; 类型转换
+  
+- 算术运算指令
+
+      ADD, ADC, SUB, SBB, INC, DEC, CMP, NEG
+      MUL, IMUL, CBW
+      DIV, IDIV, CWD
+    
+- 逻辑运算指令
+
+      AND, OR, XOR, NOT
+      TEST
+      SHL, SHR, SAL, SAR, ROL, ROR, RCL, RCR
+
+- 控制转移指令
+
+      JMP (short, near, word, far, dword)
+      JA/JB/JE 系列, JG/JL/JE 系列
+      LOOP, LOOPZ, LOOPNZ
+      CALL (near, word, far, dword)
+      RET, RETF
+      INT, IRET
+
+- 处理器控制指令
+
+      CLC, STC, CLI, STI, CLD, STD, NOT, HLT
+
+- 其他指令
+
+      LODS, STOS, MOVS, CMPS, SCAS, REP ; 串处理
+      IN, OUT
+
+### 传送指令
+
+    MOV, XCHG, PUSH, POP, PUSHF, POPF
+
+类型转换: 打破类型匹配约定, 按照希望的类型来寻址
+
+- `BYTE PTR`, `WORD PTR`, `DWORD PTR`
+
+段超越: 打破操作数的段缺省约定, 转向指定的段来寻址
+
+- `CS:`, `DS:`, `ES:`, `SS:`
+
+`MOV` 指令:
+
+语法为 `MOV DST, SRC`, 必须遵守数据通路和以下规则:
+
+- 源和目的操作数必须类型匹配（8 位对 8 位，16 位对 16 位）
+- 目的操作数不能是立即数
+- 源和目的操作数不能同时为内存操作数（串指令除外）
+- 源和目的操作数不能通识为段寄存器
+
+以下指令是错误的:
+
+    MOV AX, BL  ; 将 BL 赋值给 AX, 扩展成 16 位 -- 类型不匹配
+    MOV ES, DS  ; 将 ES 设成与 DS 相同 -- 源和目的不能通识为段寄存器
+    MOV y x     ; 赋值 y = x -- 不能内存到内存
+    MOV [DI], [SI]  ; 间接寻址, 内存变量传送 -- 不能内存到内存
 
 
