@@ -283,3 +283,338 @@
 
 注意: 上述代码中的 `BX` 不能换成 `BP`, 因为 `BP` 默认相对 `SS` 寻址，破坏堆栈段且 `X5` 没有改变。
 
+### 算术运算指令
+
+#### 加减法指令
+
+    ADD dst, src    ; dst += src
+    ADC dst, src    ; dst += src + CF (带进位加)
+    INC opr         ; opr++
+    SUB dst, src    ; dst -= src
+    SBB dst, src    ; dst -= src - CF (带借位减)
+    DEC opr         ; opr--
+
+算术运算影响符号位:
+
+- `ZF`: 如果运算结果为零则 `ZF=1`
+- `SF`: 等于运算结果 dst 的最高位, 即符号位
+- `CF`: 加法有进位或减法有借位, 则 `CF=1`
+- `OF`: 若操作数符号相同且相加结果符号与操作数相反, 则 `OF=1`
+
+加法举例
+
+    ; 数据定义
+    X   DW  ?
+    Y   DW  ?
+    Z   DD  ?
+    
+    ; 代码实现 Z = X + Y
+    MOV DX, 0   ; 用 DX:AX 当被加数, 先清零 DX
+    MOV AX, 0
+    MOV AX, X   ; AX 做被加数的低 16 位
+    ADD AX, Y   ; AX += Y, 可能产生进位 CF=1
+    ADC DX, 0   ; DX += CF
+    MOV WORD PTR Z, AX      ; 储存和的低字
+    MOV WORD PTR Z+2, DX    ; 储存和的高字
+
+减法举例
+
+    ; 数据定义
+    X   DD  ?
+    Y   DD  ?
+    Z   DD  ?
+    
+    ; 代码实现 Z = X - Y
+    MOV DX, WORD PTR X+2    ; 用 DX:AX 作被减数, DX 作高字
+    MOV AX, WORD PTR X      ; AX 作低字
+    SUB AX, WORD PTR Y      ; 先进行低 16 位减法
+    SBB DX, WORD PTR Y+2    ; 高 16 位借位剑法
+    MOV WORD PTR Z, AX      ; 储存差的低字
+    MOV WORD PTR Z+2, DX    ; 储存差的高字
+
+#### 求补和比较
+
+    NEG opr         ; opr = -opr
+    CMP opr1, opr2  ; opr1 - opr2, 结果不送回, 只影响标志位
+
+#### 乘除法
+
+无符号乘 `MUL`
+
+- 字节操作数: 8 位 x 8 位, `AX = AL * src`
+- 字操作数: 16 位 x 16 位, `DX:AX = AX * src`
+
+其中 `src` 为 8 位或 16 位的 reg 或 mem, **不能是立即数**。
+
+无符号除法 `DIV`
+
+- 字节操作数: `AX / src`, 商在 `AL`, 余数在 `AH`
+- 字操作数: `DX:AX / src`, 商在 `AX`, 余数在 `DX`
+
+同理，`src` 不能是立即数。
+
+举例:
+
+    MUL AL              ; AX = AL * AL
+    MUL 10              ; 错误, src 不能为立即数
+    DIV 10              ; 错误, src 不能为立即数
+    MUL X1              ; X1 为 DB 或 DW 变量
+    MUL [SI]            ; 错误, 虽然可用内存操作数但类型不明
+    MUL BYTE PTR [SI]   ; 正确, AX = AL * op8
+    MUL WORD PTR [SI]   ; 正确, DX:AX = AX * op16
+
+举例 `Y=X*10`
+
+    X   DW  ?
+    Y   DW  ?
+
+    MOV AX, X
+    MOV BX, 10
+    MUL BX      ; DX:AX = AX * BX
+    MOV Y, AX   ; 只考虑低 16 位, 不考虑溢出
+
+举例 `X=Y/10`
+
+    X   DW  ?
+    Y   DW  ?
+    MOV AX, Y
+    MOV BX, 10
+    MOV DX, 0   ; 清零 DX, 被除数是 DX:AX
+    DIV BX      ; DX:AX / BX, 商在 AX 余数在 DX
+    MOV X, AX   ; 忽略余数
+
+注意这里不能用 8 位除法，否则会溢出。
+
+#### 逻辑运算
+
+    AND dst, src    ; dst &= src
+    OR dst, src     ; dst |= src
+    XOR dst, src    ; dst ^= src
+    NOT dst         ; dst = ~src
+
+可以用这些指令实现组合/屏蔽/分离/置位，例如:
+
+    AND AL, 0FH     ; 清零高 4 位
+    AND AL, F0H     ; 清零低 4 位
+    AND AL, FEH     ; 清零最低位
+    OR  AL, 80H     ; 最高位置 1
+    XOR AL, AL      ; 清零 AL, 等价于 MOV AL, 0 且效率更高
+
+    OR AL,  30H     ; 将 0~9 变为 '0'~'9'
+    AND AL, 0FH     ; 将 '0'~'9' 变为 0~9
+
+#### 移位指令
+
+    SHL dst, count  ; 逻辑左移
+    SAL dst, count  ; 算术左移
+    SHR dst, count  ; 逻辑右移
+    SAR dst, count  ; 算术右移
+    ROL dst, count  ; 循环左移
+    ROR dst, count  ; 循环右移
+    RCL dst, count  ; 进位循环左移
+    RCR dst, count  ; 进位循环右移
+
+注意: `count` 只能为 `1` 或 `CL`
+
+示例 `X = X * 10`, `X = (X << 3) + (X << 1)`
+
+    X   DW  ?
+
+    MOV BX, X
+    SHL BX, 1
+    PUSH BX     ; X << 1
+    SHL BX 1
+    SHL BX 1    ; X << 3
+    POP AX      ; AX = X << 1
+    ADD AX, BX  ; AX = (X<<1) + (X<<3)
+    MOV X, AX
+
+示例 双字 `X`，`X << 4`
+
+    X   DD  ?
+
+    MOV AX, WORD PTR X
+    MOV DX, WORD PTR X+2
+    SHL AX, 1   ; 移出 CF
+    RCL DX, 1   ; 移入 CF
+    SHL AX, 1
+    RCL DX, 1
+    SHL AX, 1
+    RCL DX, 1
+    SHL AX, 1
+    RCL DX, 1
+
+    ; 也可以用循环实现但不如展开的效率高
+    MOV CX, 4
+    LP1:
+    SHL AX, 1
+    RCL DX, 1
+    LOOP LP1
+
+
+### 转移指令
+
+#### 条件转移
+
+- 无符号比较: `JA`/`JB`/`JE` 系列 (**A**bove / **B**elow / **E**qual)
+- 有符号比较: `JG`/`JL`/`JE` 系列 (**G**reater / **L**ess / **E**qual)
+
+指令格式: `JX 标号` ，比较的依据是**标志位**（紧跟 `CMP` 指令）。标号位于指令前面，实质是一个段内偏移值。
+
+无符号数的条件转移指令:
+
+- `JA` (`JNBE`): 无符号高于时转移
+- `JAE` (`JNB` / `JNC`): 无符号高于等于时转移 (`CF=0` 时转移)
+- `JE` (`JZ`) 等于时转移 (`ZF=1` 时转移)
+- `JBE` (`JNA`): 无符号低于等于时转移
+- `JB` (`JNAE` / `JC`): 无符号低于时转移 (`CF=1` 时转移)
+- `JNE` (`JNZ`): 不等于时转移 (`ZF=0` 时转移)
+
+示例 求 `Z=|X-Y|`，`X`, `Y`, `Z` 都是无符号数。
+
+        MOV AX, X
+        CMP AX, Y   ; if (AX < Y) swap AX, Y
+        JAE L1      ; AX >= Y 则跳过交换
+        XCHG AX, Y  ; 交换 AX 和 Y
+    L1: SUB AX, Y   ; AX -= Y
+        MOV Z, AX
+
+#### 循环指令
+
+格式: `LOOP 标号`。
+
+`LOOP`: 先 `CX -= 1`, 当 `CX` 不为零时转移。（与循环体无关，只是个转移指令）
+
+`JCXZ`: 当 `CX=0` 时转移（不执行 `CX -= 1`）
+
+示例
+
+    MOV CX, 4
+    LP1:
+    ......
+    LOOP LP1
+
+    MOV CX, 4
+    LP2:
+    DEC CX
+    JCXZ LP2
+
+#### 无条件转移指令
+
+`JMP` 指令, 格式: `JMP 标号|寄存器操作数|内存操作数`
+
+1. 段内直接短转移: `JMP SHORT PTR 标号`, EA 是 8 位
+2. 段内直接转移: `JMP NEAR PTR 标号`
+3. 段内间接转移: `JMP WORD PTR 寄存器或内存`
+4. 段间直接转移: `JMP FAR PTR 标号`
+5. 段间间接转移: `JMP DWORD PTR 寄存器或内存`
+
+#### 子程序调用
+
+- `CALL` 指令: 子程序调用
+- `RET` 指令: 从子程序中返回
+
+`CALL` 指令:
+
+1. 段内直接调用: `CALL dst`
+  - `SP=SP-2`, `SS:[SP]`: 返回地址偏移值
+  - `IP=IP+dst`
+2. 段内间接调用: `CALL dst`
+  - `SP=SP-2`, `SS:[SP]`: 返回地址偏移值
+  - `IP=*dst`
+3. 段间直接调用: `CALL dst`
+  - `SP=SP-2`, `SS:[SP]`: 返回地址段值
+  - `SP=SP-2`, `SS:[SP]`: 返回地址偏移值
+  - `IP=OFFSET dst`
+  - `CS=SEG dst`
+4. 段间间接调用: `CALL dst`
+  - `SP=SP-2`, `SS:[SP]`: 返回地址段值
+  - `SP=SP-2`, `SS:[SP]`: 返回地址偏移值
+  - `IP` 为 `EA` 的低 16 位
+  - `CS` 为 `EA` 的高 16 位
+
+段内调用，`dst` 应为 `NEAR PTR`, 段间调用则为 `FAR PTR`。
+
+示例
+
+    CALL P1             ; 段内直接调用 P1, P1 为 NEAR
+    CALL NEAR PTR P1    ; 同上
+    CALL P2             ; 段间直接调用 P2, P2 为 FAR
+    CALL FAR PTR P2     ; 同上
+    CALL BX             ; 段内间接寻址, 过程地址位于 BX 中
+    CALL [BX]           ; 段内间接地址, 过程地址位于数据段中
+    CALL WORD PTR [BX]  ; 同上
+
+`RET` 指令:
+
+1. 段内返回: `RET`
+  - `IP=[SP]`, `SP=SP+2`
+2. 段内带立即数返回: `RET exp`
+  - `IP=[SP]`, `SP=SP+2`
+  - `SP=SP+exp`
+3. 段间返回: `RET`
+  - `IP=[SP]`, `SP=SP+2`
+  - `CS=[SP]`, `SP=SP+2`
+4. 段间带立即数返回: `RET exp`
+  - `IP=[SP]`, `SP=SP+2`
+  - `CS=[SP]`, `SP=SP+2`
+  - `SP=SP+exp`
+
+过程的定义
+
+    过程名      PROC [near | far]
+                过程体
+                RET
+    过程名      ENDP
+
+## 应用举例
+
+将内存中的值 x 显示为 10 进制
+
+    MOV AX, X       ; 取 AX
+    XOR DX, DX      ; DX:AX 作为被除数
+    MOV BX, 10000   ; 依次除以 10000, 1000, 100, 10 显示商
+    DIV BX          ; DX:AX / BX, 商在 AX, 余数在 DX
+    PUSH DX         ; 保存余数
+    MOV DL, AL      ; 显示的字符送 DL
+    OR DL, 30H      ; 0~9 -> '0'~'9'
+    MOV AH, 2       ; DOS 2 号功能调用, 显示 DL 的 ASCII 字符
+    INT 21H         ; DOS 功能调用
+
+    POP AX          ; 上次的余数作为被除数
+    XOR DX, DX
+    MOV BX, 1000    ; 上次 10000, 这次 1000
+    DIV BX
+    PUSH DX
+    MOV DL, AL
+    OR DL, 30H
+    MOV AH, 2
+    INT 21H
+
+    POP AX
+    XOR DX, DX
+    MOV BX, 100     ; 1000 -> 100
+    DIV BX
+    PUSH DX
+    MOV DL, AL
+    OR DL, 30H
+    MOV AH, 2
+    INT 21H
+
+    POP AX
+    XOR DX, DX
+    MOV BX, 10      ; 100 -> 10
+    DIV BX
+    PUSH DX
+    MOV DL, AL
+    OR DL, 30H
+    MOV AH, 2
+    INT 21H
+
+    POP AX
+    MOV DL, AH      ; 最后一个余数送给输出
+    OR DL, 30H      ; 转成 ASCII 码
+    MOV AH, 
+    INT 21H
+
+以上代码也可以写成循环（次数为 4），不如展开了效率高
