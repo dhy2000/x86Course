@@ -614,7 +614,7 @@
     POP AX
     MOV DL, AH      ; 最后一个余数送给输出
     OR DL, 30H      ; 转成 ASCII 码
-    MOV AH, 
+    MOV AH, 2
     INT 21H
 
 以上代码也可以写成循环（次数为 4），不如展开了效率高
