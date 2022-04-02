@@ -84,6 +84,7 @@ CONTINUE:
             JZ      EXIT
             JMP     SHORT LP1   ; loop LP1
 ; end of LP1
+EXIT:
             RET
 BUBBLE_SORT ENDP
 
@@ -121,7 +122,6 @@ PRINT_LOOP1_END:
 ; call bubblesort
             CALL    BUBBLE_SORT
 ; end of sort
-EXIT:
             MOV     CX,0
             MOV     SI,0
 PRINT_LOOP2:
