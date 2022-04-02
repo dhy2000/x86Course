@@ -88,6 +88,31 @@ EXIT:
             RET
 BUBBLE_SORT ENDP
 
+PRINT_TABLE PROC    ; print `TABLE` with `TABLE_LEN` before
+            MOV     CX,0
+            MOV     SI,0
+PRINT_LOOP:
+            MOV     DX, [SI+TABLE]
+            CALL PUTHEX16
+            ; cx += 1
+            INC     CX
+            ADD     SI, 2
+            CMP     CX, TABLE_LEN
+            JZ      PRINT_LOOP_END
+            ; putchar ' '
+            MOV     DL, 20H
+            MOV     AH, 2
+            INT     21H
+            ; loop
+            JMP     PRINT_LOOP
+PRINT_LOOP_END:
+            ; putchar '\n'
+            MOV     DL, 0AH
+            MOV     AH, 2
+            INT     21H
+            RET
+PRINT_TABLE ENDP
+
 ; main program
 MAIN        PROC
 ; setup stack and data
@@ -97,52 +122,14 @@ MAIN        PROC
             MOV     AX,DATA
             MOV     DS,AX               ;SET SS,SP,DS
 ; display the old table
-            MOV     CX,0
-            MOV     SI,0
-PRINT_LOOP1:
-            MOV     DX, [SI+TABLE]
-            CALL PUTHEX16
-            ; cx += 1
-            INC     CX
-            ADD     SI, 2
-            CMP     CX, TABLE_LEN
-            JZ      PRINT_LOOP1_END
-            ; putchar ' '
-            MOV     DL, 20H
-            MOV     AH, 2
-            INT     21H
-            ; loop
-            JMP     PRINT_LOOP1
-; end of print loop 1
-PRINT_LOOP1_END:
-            ; putchar '\n'
-            MOV     DL, 0AH
-            MOV     AH, 2
-            INT     21H
+            CALL    PRINT_TABLE
 ; call bubblesort
             CALL    BUBBLE_SORT
-; end of sort
-            MOV     CX,0
-            MOV     SI,0
-PRINT_LOOP2:
-            MOV     DX, [SI+TABLE]
-            CALL PUTHEX16
-            ; cx += 1
-            INC     CX
-            ADD     SI, 2
-            CMP     CX, TABLE_LEN
-            JZ      PRINT_LOOP2_END
-            ; putchar ' '
-            MOV     DL, 20H
-            MOV     AH, 2
-            INT     21H
-            JMP     PRINT_LOOP2
-; end of print loop 2
-PRINT_LOOP2_END:
+; print sorted table
+            CALL    PRINT_TABLE
 ; return to dos
             MOV     AX,4C00H
             INT     21H
 MAIN        ENDP
 CODE        ENDS
 END         MAIN
-
