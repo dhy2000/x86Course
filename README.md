@@ -45,3 +45,52 @@
 
   ![mult32](img/mult32.svg)
 
+- `SORT.ASM`
+
+  在内存中定义字表 (16 位整数数组), 从小到大冒泡排序, 输出排序前和排序后的数组 (十六进制, 空格隔开)
+
+  - 16 位十六进制整数输出
+  - 输出数组, 以空格隔开, 行尾无多余空格
+  - 冒泡排序, 交换标记
+
+  此程序为第二次实验作业第 1 题，其中子程序 `BUBBLE_SORT` 改编自老师提供的示例代码。
+
+  以下排序代码中，`BX` 寄存器表示当前一轮遍历是否没有交换 (如果没有则已经有序); `CX` 寄存器用于和 `LOOP` 指令配合，作为循环次数计数器; `SI` 为指针，代表 `TABLE[i]`。
+
+      ; bubble sort
+      BUBBLE_SORT PROC    ; sort `TABLE` in memory with `TABLE_LEN` before.
+      LP1:
+                  MOV     BX, 1   ; flag
+                  MOV     CX, TABLE_LEN
+                  DEC     CX  ; loop TABLE_LEN times
+                  LEA     SI, TABLE   ; i = 0
+      LP2:
+                  MOV     AX, [SI]    ; a[i], a[i + 1]
+                  CMP     AX, [SI+2]
+                  JBE     CONTINUE    ; if a[i] > a[i + 1] swap
+                  XCHG    AX, [SI+2]  ; swap
+                  MOV     [SI], AX
+                  MOV     BX, 0       ; swap happen in a pass
+      CONTINUE:
+                  ADD     SI, 2       ; i++
+                  LOOP    LP2
+      ; end of LP2
+                  CMP     BX, 1       ; if (not swapped) break
+                  JZ      EXIT
+                  JMP     SHORT LP1   ; loop LP1
+      ; end of LP1
+                  RET
+      BUBBLE_SORT ENDP
+  
+  该汇编代码对应的伪 C 代码:
+
+  ```c
+  while (1) {
+      flag = true;
+      for (i = 0; i < TABLE_LEN; i++) {
+          if (a[i] > a[i + 1])
+             swap (&a[i], &a[i + 1]);
+      }
+      if (flag) break;
+  }
+  ```
