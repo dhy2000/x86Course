@@ -1,0 +1,62 @@
+name: autorun
+on: 
+  push:
+    branches:
+      - test_action
+
+env:
+  MASM_DOWNLOAD_URL: https://filedropper.com/d/s/download/BeMdA35QeYTUiwPU3QSMBXtuPLwYv4
+
+jobs:
+  asm_run:
+    name: Autorun Assembly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install dosbox
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dosbox
+          sudo apt-get install xvfb
+      - name: get masm
+        run: |
+          echo "Download masm-Bin from "${{ env.MASM_DOWNLOAD_URL }}
+          curl "${{ env.MASM_DOWNLOAD_URL }}" > masm-bin.zip
+          unzip masm-bin.zip -d ~/masm
+      - name: copy program and testcases
+        run: |
+          rm -rf ~/masm/program && mkdir -p ~/masm/program
+          cp ADD32.ASM ~/masm/program/PROG.ASM
+          for testin in `find testcases -type f -name 'test*.in'`; do cp $testin ~/masm/program/`basename $testin | tr 'a-z' 'A-Z'`; done
+          echo -e 'PROG.OBJ\nPROG.LST\n\n' > ~/masm/program/MASM.TXT
+          echo -e 'PROG.EXE\nPROG.MAP\n\n' > ~/masm/program/LINK.TXT
+      - name: setup dosbox batch
+        run: |
+          DOSBOX_CONF=`dosbox -printconf`
+          echo 'mount c ~/masm' >> $DOSBOX_CONF
+          echo 'set PATH=%PATH%;C:\BIN\;' >> $DOSBOX_CONF
+          echo 'c:' >> $DOSBOX_CONF
+          echo 'cd program' >> $DOSBOX_CONF
+          echo 'MASM PROG.ASM < MASM.txt' >> $DOSBOX_CONF
+          echo 'LINK PROG.OBJ < LINK.txt' >> $DOSBOX_CONF
+          cd ~/masm/program
+          for testcase in `ls TEST*.IN | sed 's/.IN//g'`; do
+            echo 'PROG.EXE < '$testcase'.IN > '$testcase'.OUT' >> $DOSBOX_CONF
+          done
+          echo 'exit' >> $DOSBOX_CONF
+      - name: run dosbox
+        run: timeout 60 xvfb-run dosbox
+      - name: show results
+        run: |
+          cd ~/masm/program/
+          for testcase in `ls TEST*.IN | sed 's/.IN//g'`; do
+            echo $testcase'.IN'
+            cat $testcase'.IN'
+            echo $testcase'.OUT'
+            cat $testcase'.OUT' || true
+          done
+      - name: upload results
+        uses: actions/upload-artifact@v3
+        with:
+          name: results
+          path: ~/masm/program/
