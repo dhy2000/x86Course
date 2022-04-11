@@ -216,12 +216,14 @@ MAIN        PROC
             MUL BX
             ADD WORD PTR P+02H, AX
             ADC WORD PTR P+04H, DX
+            ADC WORD PTR P+06H, 0
             ; hi1 * lo2
             MOV AX, WORD PTR X+02H
             MOV BX, WORD PTR Y+00H
             MUL BX
             ADD WORD PTR P+02H, AX
             ADC WORD PTR P+04H, DX
+            ADC WORD PTR P+06H, 0
             ; hi1 * hi2
             MOV AX, WORD PTR X+02H
             MOV BX, WORD PTR Y+02H
