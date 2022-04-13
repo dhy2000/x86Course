@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RUN_DIR: ~/assembly
+      DOSBOX_TIMEOUT: 30
     steps:
       - uses: actions/checkout@v2
       - name: install dosbox
@@ -27,7 +28,6 @@ jobs:
           echo 'set PATH=%PATH%;C:\BIN\;' >> $DOSBOX_CONF
           echo 'd:' >> $DOSBOX_CONF
       - name: run problem 1 (MMOV)
-        continue-on-error: true
         env:
           SOURCE_NAME: "1_MMOV.ASM"
         run: |
@@ -35,56 +35,68 @@ jobs:
           cp ${{ env.SOURCE_NAME }} ${{ env.RUN_DIR }}/PROG.ASM
           echo -e 'PROG.OBJ\n\n\n' > ${{ env.RUN_DIR }}/MASM.IN
           echo -e 'PROG.EXE\n\n\n' > ${{ env.RUN_DIR }}/LINK.IN
-          timeout 60 xvfb-run dosbox \
+          timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
             -c 'MASM PROG.ASM < MASM.IN' \
-            -c 'LINK PROG.ASM < LINK.IN' \
+            -c 'LINK PROG.OBJ < LINK.IN' \
             -c 'PROG.EXE > PROG.OUT' \
             -c 'exit'
           echo 'Output result:'
           cat ${{ env.RUN_DIR }}/PROG.OUT
       - name: test problem 2 (SCMP)
-        continue-on-error: true
         env:
           SOURCE_NAME: "2_SCMP.ASM"
           TESTCASES: "test/test2.txt"
+          CHECKER: "scripts/strcmp_check.sh"
         run: |
           rm -rf ${{ env.RUN_DIR }} && mkdir -p ${{ env.RUN_DIR }}
           cp ${{ env.SOURCE_NAME }} ${{ env.RUN_DIR }}/PROG.ASM
           echo -e 'PROG.OBJ\n\n\n' > ${{ env.RUN_DIR }}/MASM.IN
           echo -e 'PROG.EXE\n\n\n' > ${{ env.RUN_DIR }}/LINK.IN
+          timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
+            -c 'MASM PROG.ASM < MASM.IN' \
+            -c 'LINK PROG.OBJ < LINK.IN' \
+            -c 'exit'
           for i in `cat ${{ env.TESTCASES }}`; do
             echo 'Running on test '$i
-            echo $i > PROG.IN
+            echo -e $i'\r' > ${{ env.RUN_DIR }}/PROG.IN
             rm -f PROG.OUT
-            timeout 60 xvfb-run dosbox \
-              -c 'PROG.EXE < PROG.IN > PROG.OUT'
-              -c 'exit'
+            timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
+              -c 'PROG.EXE < PROG.IN > PROG.OUT' \
+              -c 'exit' >/dev/null
             echo '- Input:'
-            cat PROG.IN
+            cat ${{ env.RUN_DIR }}/PROG.IN
             echo '- Output:'
-            cat PROG.OUT
+            cat ${{ env.RUN_DIR }}/PROG.OUT
+            echo
+            bash ${{ env.CHECKER }} ${{ env.RUN_DIR }}/PROG.IN ${{ env.RUN_DIR }}/PROG.OUT
           done
       - name: test problem 3 (FIND)
-        continue-on-error: true
         env:
           SOURCE_NAME: "3_FIND.ASM"
           TESTCASES: "test/test3.txt"
+          CHECKER: "scripts/find_check.sh"
         run: |
           rm -rf ${{ env.RUN_DIR }} && mkdir -p ${{ env.RUN_DIR }}
           cp ${{ env.SOURCE_NAME }} ${{ env.RUN_DIR }}/PROG.ASM
           echo -e 'PROG.OBJ\n\n\n' > ${{ env.RUN_DIR }}/MASM.IN
           echo -e 'PROG.EXE\n\n\n' > ${{ env.RUN_DIR }}/LINK.IN
+          timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
+            -c 'MASM PROG.ASM < MASM.IN' \
+            -c 'LINK PROG.OBJ < LINK.IN' \
+            -c 'exit'
           for i in `cat ${{ env.TESTCASES }}`; do
             echo 'Running on test '$i
-            echo $i > PROG.IN
+            echo -e $i'\r' > ${{ env.RUN_DIR }}/PROG.IN
             rm -f PROG.OUT
-            timeout 60 xvfb-run dosbox \
-              -c 'PROG.EXE < PROG.IN > PROG.OUT'
-              -c 'exit'
+            timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
+              -c 'PROG.EXE < PROG.IN > PROG.OUT' \
+              -c 'exit' >/dev/null
             echo '- Input:'
-            cat PROG.IN
+            cat ${{ env.RUN_DIR }}/PROG.IN
             echo '- Output:'
-            cat PROG.OUT
+            cat ${{ env.RUN_DIR }}/PROG.OUT
+            echo
+            bash ${{ env.CHECKER }} ${{ env.RUN_DIR }}/PROG.IN ${{ env.RUN_DIR }}/PROG.OUT
           done
 
           

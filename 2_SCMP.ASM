@@ -54,6 +54,10 @@ MAIN    PROC
     LEA DX, STR2_BUF
     MOV AH, 0AH
     INT 21H
+; putchar '\n'
+    MOV DL, 0AH
+    MOV AH, 2
+    INT 21H
 ; append '$' after string2
     MOV BH, 0
     MOV BL, STR2_LEN
