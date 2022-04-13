@@ -1,0 +1,92 @@
+name: Auto Test
+
+on: [push]
+
+jobs:
+  asm_run:
+    name: Autorun Assembly
+    runs-on: ubuntu-latest
+    env:
+      RUN_DIR: ~/assembly
+    steps:
+      - uses: actions/checkout@v2
+      - name: install dosbox
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dosbox xvfb
+      - name: get masm and config dosbox
+        env:
+          MASM_DOWNLOAD_URL: https://filedropper.com/d/s/download/BeMdA35QeYTUiwPU3QSMBXtuPLwYv4
+          MASM_UNZIP_DIR: ~/masm
+        run: |
+          curl "${{ env.MASM_DOWNLOAD_URL }}" > ~/masm-bin.zip
+          unzip ~/masm-bin.zip -d ${{ env.MASM_UNZIP_DIR }}
+          DOSBOX_CONF=`dosbox -printconf`
+          echo 'mount c '${{ env.MASM_UNZIP_DIR }} >> $DOSBOX_CONF
+          echo 'mount d '${{ env.RUN_DIR }} >> $DOSBOX_CONF
+          echo 'set PATH=%PATH%;C:\BIN\;' >> $DOSBOX_CONF
+          echo 'd:' >> $DOSBOX_CONF
+      - name: run problem 1 (MMOV)
+        continue-on-error: true
+        env:
+          SOURCE_NAME: "1_MMOV.ASM"
+        run: |
+          rm -rf ${{ env.RUN_DIR }} && mkdir -p ${{ env.RUN_DIR }}
+          cp ${{ env.SOURCE_NAME }} ${{ env.RUN_DIR }}/PROG.ASM
+          echo -e 'PROG.OBJ\n\n\n' > ${{ env.RUN_DIR }}/MASM.IN
+          echo -e 'PROG.EXE\n\n\n' > ${{ env.RUN_DIR }}/LINK.IN
+          timeout 60 xvfb-run dosbox \
+            -c 'MASM PROG.ASM < MASM.IN' \
+            -c 'LINK PROG.ASM < LINK.IN' \
+            -c 'PROG.EXE > PROG.OUT' \
+            -c 'exit'
+          echo 'Output result:'
+          cat ${{ env.RUN_DIR }}/PROG.OUT
+      - name: test problem 2 (SCMP)
+        continue-on-error: true
+        env:
+          SOURCE_NAME: "2_SCMP.ASM"
+          TESTCASES: "test/test2.txt"
+        run: |
+          rm -rf ${{ env.RUN_DIR }} && mkdir -p ${{ env.RUN_DIR }}
+          cp ${{ env.SOURCE_NAME }} ${{ env.RUN_DIR }}/PROG.ASM
+          echo -e 'PROG.OBJ\n\n\n' > ${{ env.RUN_DIR }}/MASM.IN
+          echo -e 'PROG.EXE\n\n\n' > ${{ env.RUN_DIR }}/LINK.IN
+          for i in `cat ${{ env.TESTCASES }}`; do
+            echo 'Running on test '$i
+            echo $i > PROG.IN
+            rm -f PROG.OUT
+            timeout 60 xvfb-run dosbox \
+              -c 'PROG.EXE < PROG.IN > PROG.OUT'
+              -c 'exit'
+            echo '- Input:'
+            cat PROG.IN
+            echo '- Output:'
+            cat PROG.OUT
+          done
+      - name: test problem 3 (FIND)
+        continue-on-error: true
+        env:
+          SOURCE_NAME: "3_FIND.ASM"
+          TESTCASES: "test/test3.txt"
+        run: |
+          rm -rf ${{ env.RUN_DIR }} && mkdir -p ${{ env.RUN_DIR }}
+          cp ${{ env.SOURCE_NAME }} ${{ env.RUN_DIR }}/PROG.ASM
+          echo -e 'PROG.OBJ\n\n\n' > ${{ env.RUN_DIR }}/MASM.IN
+          echo -e 'PROG.EXE\n\n\n' > ${{ env.RUN_DIR }}/LINK.IN
+          for i in `cat ${{ env.TESTCASES }}`; do
+            echo 'Running on test '$i
+            echo $i > PROG.IN
+            rm -f PROG.OUT
+            timeout 60 xvfb-run dosbox \
+              -c 'PROG.EXE < PROG.IN > PROG.OUT'
+              -c 'exit'
+            echo '- Input:'
+            cat PROG.IN
+            echo '- Output:'
+            cat PROG.OUT
+          done
+
+          
+
+
