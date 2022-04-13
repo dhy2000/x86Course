@@ -3,3 +3,9 @@ x
 xx
 123x456x
 x1x2x3
+xxxxxxxx
+xXxXxXxX
+startx
+xserver
+psaux
+dosbox
