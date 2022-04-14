@@ -98,6 +98,32 @@ jobs:
             echo
             bash ${{ env.CHECKER }} ${{ env.RUN_DIR }}/PROG.IN ${{ env.RUN_DIR }}/PROG.OUT
           done
+      - name: test problem 4 (SORT)
+        env:
+          SOURCE_NAME: "4_SORT.ASM"
+          TESTCASES: "test/test4.txt"
+        run: |
+          rm -rf ${{ env.RUN_DIR }} && mkdir -p ${{ env.RUN_DIR }}
+          cp ${{ env.SOURCE_NAME }} ${{ env.RUN_DIR }}/PROG.ASM
+          echo -e 'PROG.OBJ\n\n\n' > ${{ env.RUN_DIR }}/MASM.IN
+          echo -e 'PROG.EXE\n\n\n' > ${{ env.RUN_DIR }}/LINK.IN
+          timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
+            -c 'MASM PROG.ASM < MASM.IN' \
+            -c 'LINK PROG.OBJ < LINK.IN' \
+            -c 'exit'
+          for i in `cat ${{ env.TESTCASES }}`; do
+            echo 'Running on test '$i
+            echo -e $i'\r' > ${{ env.RUN_DIR }}/PROG.IN
+            rm -f PROG.OUT
+            timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
+              -c 'PROG.EXE < PROG.IN > PROG.OUT' \
+              -c 'exit' >/dev/null
+            echo '- Input:'
+            cat ${{ env.RUN_DIR }}/PROG.IN
+            echo '- Output:'
+            cat ${{ env.RUN_DIR }}/PROG.OUT
+            echo
+          done
 
           
 
