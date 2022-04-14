@@ -167,8 +167,7 @@ PUTS    ENDP
 ; print str list
 PUTLIST PROC
     ; loop STR_NUM times
-    MOV CX, STR_NUM
-    DEC CX              ; loop STR_NUM times
+    MOV CX, STR_NUM     ; loop STR_NUM times
     LEA SI, STR_LIST    ; SI += 2 each cycle
 PUTLIST_LP:
     ; output str_list[i]
