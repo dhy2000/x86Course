@@ -79,7 +79,7 @@ MAIN    PROC
     LEA AX, STRING1-5H
     PUSH AX
     CALL TRY
-; attempt 3: string2 after string1 with intersection
+; try 3: string2 after string1 with intersection
     LEA AX, STRING1
     PUSH AX
     LEA AX, STRING1+5H
