@@ -23,6 +23,42 @@ MEMMOVE PROC
     RET
 MEMMOVE ENDP
 
+; print str1, call memmove, print str1 and str2
+TRY     PROC
+; head address of str2 and str1 is already pushed to stack
+    MOV BP, SP  ; [BP+2H]: str2, [BP+4H]: str1
+    ; print str1
+    MOV DX, [BP+4H]
+    MOV AH, 9
+    INT 21H
+    ; print '\n'
+    MOV DL, 0AH
+    MOV AH, 2
+    INT 21H
+    ; call memmove: load SI and DI
+    MOV SI, [BP+4H]
+    MOV DI, [BP+2H]
+    CALL MEMMOVE
+    ; print str1
+    MOV DX, [BP+4H]
+    MOV AH, 9
+    INT 21H
+    ; print ' '
+    MOV DL, 20H
+    MOV AH, 2
+    INT 21H
+    ; print str2
+    MOV DX, [BP+2H]
+    MOV AH, 9
+    INT 21H
+    ; print '\n'
+    MOV DL, 0AH
+    MOV AH, 2
+    INT 21H
+; end, pop str2 and str1
+    RET 4H
+TRY     ENDP
+
 MAIN    PROC
 ; setup segments
     MOV AX, STACK
@@ -31,93 +67,24 @@ MAIN    PROC
     MOV AX, DATA
     MOV DS, AX
     MOV ES, AX
-; attempt 1: string2 does not intersect with string1
-    ; print string1
-    LEA DX, STRING1
-    MOV AH, 9
-    INT 21H
-    ; putchar '\n'
-    MOV DL, 0AH
-    MOV AH, 2
-    INT 21H
-    ; prepare DS:[SI] and ES:[DI]
-    LEA SI, STRING1
-    LEA DI, STRING2
-    CALL MEMMOVE
-    ; print string1
-    LEA DX, STRING1
-    MOV AH, 9
-    INT 21H
-    ; putchar ' '
-    MOV DL, 20H
-    MOV AH, 2
-    INT 21H
-    ; print string2
-    LEA DX, STRING2
-    MOV AH, 9
-    INT 21H
-    ; putchar '\n'
-    MOV DL, 0AH
-    MOV AH, 2
-    INT 21H
-; attempt 2: string2 before string1 with intersection
-    ; print string1
-    LEA DX, STRING1
-    MOV AH, 9
-    INT 21H
-    ; putchar '\n'
-    MOV DL, 0AH
-    MOV AH, 2
-    INT 21H
-    ; prepare DS:[SI] and ES:[DI]
-    LEA SI, STRING1
-    LEA DI, STRING1-5H
-    CALL MEMMOVE
-    ; print string1
-    LEA DX, STRING1
-    MOV AH, 9
-    INT 21H
-    ; putchar ' '
-    MOV DL, 20H
-    MOV AH, 2
-    INT 21H
-    ; print string2
-    LEA DX, STRING1-5H
-    MOV AH, 9
-    INT 21H
-    ; putchar '\n'
-    MOV DL, 0AH
-    MOV AH, 2
-    INT 21H
+; try 1: string2 does not intersect with string1
+    LEA AX, STRING1
+    PUSH AX
+    LEA AX, STRING2
+    PUSH AX
+    CALL TRY
+; try 2: string2 before string1 with intersection
+    LEA AX, STRING1
+    PUSH AX
+    LEA AX, STRING1-5H
+    PUSH AX
+    CALL TRY
 ; attempt 3: string2 after string1 with intersection
-    ; print string1
-    LEA DX, STRING1
-    MOV AH, 9
-    INT 21H     ; string1 is already corrupted by last process
-    ; putchar '\n'
-    MOV DL, 0AH
-    MOV AH, 2
-    INT 21H
-    ; prepare DS:[SI] and ES:[DI]
-    LEA SI, STRING1
-    LEA DI, STRING1+5H
-    CALL MEMMOVE
-    ; print string1
-    LEA DX, STRING1
-    MOV AH, 9
-    INT 21H
-    ; putchar ' '
-    MOV DL, 20H
-    MOV AH, 2
-    INT 21H
-    ; print string2
-    LEA DX, STRING1+5H
-    MOV AH, 9
-    INT 21H
-    ; putchar '\n'
-    MOV DL, 0AH
-    MOV AH, 2
-    INT 21H
+    LEA AX, STRING1
+    PUSH AX
+    LEA AX, STRING1+5H
+    PUSH AX
+    CALL TRY
 ; return to dos
     MOV AX, 4C00H
     INT 21H
