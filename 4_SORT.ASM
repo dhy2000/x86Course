@@ -125,11 +125,11 @@ INSERT  PROC
     ; swap until str[i - 1] <= str8 (or i == 0)
     ; loop old str_num times
     MOV CX, STR_NUM
-    SUB CX, 1
 INSERT_LP:
     ; strcmp str_list[i], str_list[i+1]
     ; str_list are words, use SI=2*CX
-    MOV SI, CX
+    MOV SI, CX  ; CX from STR_NUM to 1
+    SUB SI, 1   ; i = CX - 1
     ADD SI, SI  ; 2 * CX, STR_LIST[SI]
     PUSH STR_LIST[SI]
     PUSH STR_LIST[SI+02H]
@@ -139,7 +139,7 @@ INSERT_LP:
     MOV AX, STR_LIST[SI]
     XCHG AX, STR_LIST[SI+02H]
     MOV STR_LIST[SI], AX
-    LOOP INSERT_LP  ; CX--
+    LOOP INSERT_LP  ; CX--, if (CX==0) break
 INSERT_END:
     ADD WORD PTR STR_NUM, 1
     RET
