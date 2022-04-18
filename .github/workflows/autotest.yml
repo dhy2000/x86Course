@@ -71,9 +71,10 @@ jobs:
               cat ${{ env.RUN_DIR }}/PROG.IN
               echo '- Output:'
               cat ${{ env.RUN_DIR }}/PROG.OUT
+              echo
+              bash ${{ env.CHECKER }} ${{ env.RUN_DIR }}/PROG.IN ${{ env.RUN_DIR }}/PROG.OUT
             fi
             echo
-            bash ${{ env.CHECKER }} ${{ env.RUN_DIR }}/PROG.IN ${{ env.RUN_DIR }}/PROG.OUT
           done
       - name: test problem 3 (FIND)
         env:
@@ -104,14 +105,16 @@ jobs:
               cat ${{ env.RUN_DIR }}/PROG.IN
               echo '- Output:'
               cat ${{ env.RUN_DIR }}/PROG.OUT
+              echo
+              bash ${{ env.CHECKER }} ${{ env.RUN_DIR }}/PROG.IN ${{ env.RUN_DIR }}/PROG.OUT
             fi
             echo
-            bash ${{ env.CHECKER }} ${{ env.RUN_DIR }}/PROG.IN ${{ env.RUN_DIR }}/PROG.OUT
           done
       - name: test problem 4 (SORT)
         env:
           SOURCE_NAME: "4_SORT.ASM"
           TESTCASES: "test/test4.txt"
+          CHECKER: "scripts/sort_check.sh"
         run: |
           rm -rf ${{ env.RUN_DIR }} && mkdir -p ${{ env.RUN_DIR }}
           cp ${{ env.SOURCE_NAME }} ${{ env.RUN_DIR }}/PROG.ASM
@@ -136,6 +139,8 @@ jobs:
               cat ${{ env.RUN_DIR }}/PROG.IN
               echo '- Output:'
               cat ${{ env.RUN_DIR }}/PROG.OUT
+              echo
+              bash ${{ env.CHECKER }} ${{ env.RUN_DIR }}/PROG.IN ${{ env.RUN_DIR }}/PROG.OUT
             fi
             echo
           done
