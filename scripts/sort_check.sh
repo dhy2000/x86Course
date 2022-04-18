@@ -10,14 +10,8 @@ function sortstr() {
 
 TABLE=`cat $2 | sed 's/\r//g' | sed -n '1p'`
 
-echo '-'$TABLE'-'
-echo '-'`sortstr "$TABLE"`'-'
-
 SORTED_TABLE_STD=`sortstr "$TABLE"`
 SORTED_TABLE=`cat $2 | sed 's/\r//g' | sed -n '2p'`
-
-echo '-'$SORTED_TABLE_STD'-'
-echo '-'$SORTED_TABLE'-'
 
 if [ "$SORTED_TABLE_STD" != "$SORTED_TABLE" ]; then
     echo "sort error"
