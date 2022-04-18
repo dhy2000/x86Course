@@ -483,7 +483,7 @@
 
 格式: `LOOP 标号`。
 
-`LOOP`: 先 `CX -= 1`, 当 `CX` 不为零时转移。（与循环体无关，只是个转移指令）
+`LOOP`: 先 `CX -= 1`, **然后**当 `CX` 不为零时转移。（与循环体无关，只是个转移指令）
 
 `JCXZ`: 当 `CX=0` 时转移（不执行 `CX -= 1`）
 
@@ -492,7 +492,7 @@
     MOV CX, 4
     LP1:
     ......
-    LOOP LP1
+    LOOP LP1    ; loop body is executed 4 times
 
     MOV CX, 4
     LP2:
