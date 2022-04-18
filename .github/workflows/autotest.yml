@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RUN_DIR: ~/assembly
-      DOSBOX_TIMEOUT: 30
+      DOSBOX_TIMEOUT: 60
     steps:
       - uses: actions/checkout@v2
       - name: install dosbox
@@ -63,10 +63,15 @@ jobs:
             timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
               -c 'PROG.EXE < PROG.IN > PROG.OUT' \
               -c 'exit' >/dev/null
-            echo '- Input:'
-            cat ${{ env.RUN_DIR }}/PROG.IN
-            echo '- Output:'
-            cat ${{ env.RUN_DIR }}/PROG.OUT
+            RET_CODE=$?
+            if [ $RET_CODE -ne 0 ]; then 
+              echo 'Time Limit Exceed or Runtime Error: exit code '$RET_CODE
+            else
+              echo '- Input:'
+              cat ${{ env.RUN_DIR }}/PROG.IN
+              echo '- Output:'
+              cat ${{ env.RUN_DIR }}/PROG.OUT
+            fi
             echo
             bash ${{ env.CHECKER }} ${{ env.RUN_DIR }}/PROG.IN ${{ env.RUN_DIR }}/PROG.OUT
           done
@@ -91,10 +96,15 @@ jobs:
             timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
               -c 'PROG.EXE < PROG.IN > PROG.OUT' \
               -c 'exit' >/dev/null
-            echo '- Input:'
-            cat ${{ env.RUN_DIR }}/PROG.IN
-            echo '- Output:'
-            cat ${{ env.RUN_DIR }}/PROG.OUT
+            RET_CODE=$?
+            if [ $RET_CODE -ne 0 ]; then 
+              echo 'Time Limit Exceed or Runtime Error: exit code '$RET_CODE
+            else
+              echo '- Input:'
+              cat ${{ env.RUN_DIR }}/PROG.IN
+              echo '- Output:'
+              cat ${{ env.RUN_DIR }}/PROG.OUT
+            fi
             echo
             bash ${{ env.CHECKER }} ${{ env.RUN_DIR }}/PROG.IN ${{ env.RUN_DIR }}/PROG.OUT
           done
@@ -118,10 +128,15 @@ jobs:
             timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
               -c 'PROG.EXE < PROG.IN > PROG.OUT' \
               -c 'exit' >/dev/null
-            echo '- Input:'
-            cat ${{ env.RUN_DIR }}/PROG.IN
-            echo '- Output:'
-            cat ${{ env.RUN_DIR }}/PROG.OUT
+            RET_CODE=$?
+            if [ $RET_CODE -ne 0 ]; then 
+              echo 'Time Limit Exceed or Runtime Error: exit code '$RET_CODE
+            else
+              echo '- Input:'
+              cat ${{ env.RUN_DIR }}/PROG.IN
+              echo '- Output:'
+              cat ${{ env.RUN_DIR }}/PROG.OUT
+            fi
             echo
           done
 
