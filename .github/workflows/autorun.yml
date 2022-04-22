@@ -1,0 +1,66 @@
+name: Autorun MASM Assembly
+
+on: [push]
+
+jobs:
+  asm_run:
+    name: Autorun Assembly
+    runs-on: ubuntu-latest
+    env:
+      RUN_DIR: ~/assembly
+      DOSBOX_TIMEOUT: 60
+    steps:
+      - uses: actions/checkout@v2
+      - name: install dosbox
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dosbox xvfb
+      - name: get masm and config dosbox
+        env:
+          MASM_DOWNLOAD_URL: https://filedropper.com/d/s/download/BeMdA35QeYTUiwPU3QSMBXtuPLwYv4
+          MASM_UNZIP_DIR: ~/masm
+        run: |
+          curl "${{ env.MASM_DOWNLOAD_URL }}" > ~/masm-bin.zip
+          unzip ~/masm-bin.zip -d ${{ env.MASM_UNZIP_DIR }}
+          DOSBOX_CONF=`dosbox -printconf`
+          echo 'mount c '${{ env.MASM_UNZIP_DIR }} >> $DOSBOX_CONF
+          echo 'mount d '${{ env.RUN_DIR }} >> $DOSBOX_CONF
+          echo 'set PATH=%PATH%;C:\BIN\;' >> $DOSBOX_CONF
+          echo 'd:' >> $DOSBOX_CONF
+      - name: run problem 1 (STRCAT)
+        env:
+          SOURCE_NAME: "STRCAT.ASM"
+          SAMPLE_INPUT: "x86_assembly"
+        run: |
+          rm -rf ${{ env.RUN_DIR }} && mkdir -p ${{ env.RUN_DIR }}
+          cp ${{ env.SOURCE_NAME }} ${{ env.RUN_DIR }}/PROG.ASM
+          echo -e 'PROG.OBJ\n\n\n' > ${{ env.RUN_DIR }}/MASM.IN
+          echo -e 'PROG.EXE\n\n\n' > ${{ env.RUN_DIR }}/LINK.IN
+          echo ${{ env.SAMPLE_INPUT }} > ${{ env.RUN_DIR }}/PROG.IN
+          timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
+            -c 'MASM PROG.ASM < MASM.IN' \
+            -c 'LINK PROG.OBJ < LINK.IN' \
+            -c 'PROG.EXE < PROG.IN > PROG.OUT' \
+            -c 'exit'
+          echo
+          echo 'Output result:'
+          cat ${{ env.RUN_DIR }}/PROG.OUT
+      - name: run problem 2 (FACT)
+        env:
+          SOURCE_NAME: "FACT.ASM"
+        run: |
+          rm -rf ${{ env.RUN_DIR }} && mkdir -p ${{ env.RUN_DIR }}
+          cp ${{ env.SOURCE_NAME }} ${{ env.RUN_DIR }}/PROG.ASM
+          echo -e 'PROG.OBJ\n\n\n' > ${{ env.RUN_DIR }}/MASM.IN
+          echo -e 'PROG.EXE\n\n\n' > ${{ env.RUN_DIR }}/LINK.IN
+          timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
+            -c 'MASM PROG.ASM < MASM.IN' \
+            -c 'LINK PROG.OBJ < LINK.IN' \
+            -c 'PROG.EXE > PROG.OUT' \
+            -c 'exit'
+          echo
+          echo 'Output result:'
+          cat ${{ env.RUN_DIR }}/PROG.OUT
+      
+    
+      
