@@ -36,7 +36,7 @@ jobs:
           cp ${{ env.SOURCE_NAME }} ${{ env.RUN_DIR }}/PROG.ASM
           echo -e 'PROG.OBJ\n\n\n' > ${{ env.RUN_DIR }}/MASM.IN
           echo -e 'PROG.EXE\n\n\n' > ${{ env.RUN_DIR }}/LINK.IN
-          echo ${{ env.SAMPLE_INPUT }} > ${{ env.RUN_DIR }}/PROG.IN
+          echo -e "${{ env.SAMPLE_INPUT }}\r\n" > ${{ env.RUN_DIR }}/PROG.IN
           timeout ${{ env.DOSBOX_TIMEOUT }} xvfb-run --auto-servernum -e /dev/null dosbox \
             -c 'MASM PROG.ASM < MASM.IN' \
             -c 'LINK PROG.OBJ < LINK.IN' \
