@@ -10,6 +10,7 @@ DATA    SEGMENT PARA
     IN_LEN  DB  ?
     IN_STR  DB  MAX_LEN DUP(?)
     STRING  DB 'Hello, ', 0h
+            DB 200h DUP(?)      ; space for strcat
 DATA    ENDS
 
 CODE    SEGMENT PARA
