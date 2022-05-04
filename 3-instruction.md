@@ -111,7 +111,7 @@
 以下指令是错误的:
 
     MOV AX, BL  ; 将 BL 赋值给 AX, 扩展成 16 位 -- 类型不匹配
-    MOV ES, DS  ; 将 ES 设成与 DS 相同 -- 源和目的不能通识为段寄存器
+    MOV ES, DS  ; 将 ES 设成与 DS 相同 -- 源和目的不能同时为段寄存器
     MOV y x     ; 赋值 y = x -- 不能内存到内存
     MOV [DI], [SI]  ; 间接寻址, 内存变量传送 -- 不能内存到内存
 
@@ -328,7 +328,7 @@
     MOV DX, WORD PTR X+2    ; 用 DX:AX 作被减数, DX 作高字
     MOV AX, WORD PTR X      ; AX 作低字
     SUB AX, WORD PTR Y      ; 先进行低 16 位减法
-    SBB DX, WORD PTR Y+2    ; 高 16 位借位剑法
+    SBB DX, WORD PTR Y+2    ; 高 16 位借位减法
     MOV WORD PTR Z, AX      ; 储存差的低字
     MOV WORD PTR Z+2, DX    ; 储存差的高字
 
@@ -390,7 +390,7 @@
     AND dst, src    ; dst &= src
     OR dst, src     ; dst |= src
     XOR dst, src    ; dst ^= src
-    NOT dst         ; dst = ~src
+    NOT dst         ; dst = ~dst
 
 可以用这些指令实现组合/屏蔽/分离/置位，例如:
 
