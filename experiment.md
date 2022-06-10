@@ -8,6 +8,10 @@
 
     yay -S dosbox
 
+安装 (Ubuntu/Debian):
+
+    sudo apt install dosbox
+
 启动:
 
     dosbox
@@ -42,12 +46,21 @@ output=opengl
 
 需要单独下载，套件内包括汇编器 `MASM.EXE`，链接器 `LINK.EXE`，调试器 `DEBUG.EXE`，代码编辑器 `EDIT.COM` 等。
 
-将下载好的 MASM 工具放置在某个目录下，例如 `~/masm` (`~` 表示家目录) 。启动 dosbox 后使用 `mount` 命令挂载主机目录并切换盘符，即可在 dosbox 中使用 MASM 。
+将下载好的 MASM 工具放置在某个目录下，例如 `~/masm` (`~` 表示家目录) 。启动 dosbox 后使用 `mount` 命令挂载主机目录并切换盘符，即可在 dosbox 中使用 MASM 。以下命令表示将主机的 `~/masm` 目录映射到虚拟盘符 `c:` 并设置当前工作目录为虚拟 c 盘的根目录。
 
     mount c ~/masm
     c:
 
 以上两条命令 ( `mount` 与切换盘符 ) 可以写入 dosbox 的配置文件末尾的 `[autoexec]` 分组，以便在下次启动 dosbox 时自动执行。
+
+类似地，编写代码的目录也可通过上述方式挂在进 dosbox，例如固定为 `~/x86` 。将该目录通过 `mount` 命令挂载到虚拟盘符 `d:`。而后默认采用 `d:` 即代码目录作为 dosbox 的默认工作目录。（此时由于 MASM 可执行文件不在当前工作目录下，需要将其加入 `PATH` 环境变量以便调用。在 dosbox 中使用 `set` 命令设置环境变量）
+
+完整的配置文件 `[autoexec]` 分组需添加内容如下:
+
+    mount c ~/masm
+    mount d ~/x86
+    set PATH=%PATH%;C:\;
+    d:
 
 ### 汇编器与链接器
 
