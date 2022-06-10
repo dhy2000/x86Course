@@ -149,7 +149,7 @@
 
 ### 返回 DOS
 
-    MOV AX, 4CH     ; AH = 4C, DOS 4C 号功能调用: 返回 DOS
+    MOV AH, 4CH     ; AH = 4C, DOS 4C 号功能调用: 返回 DOS
     MOV AL, 00H     ; AL = 给 DOS 的返回值
     INT 21H         ; 21H 表示 DOS 功能调用
 
