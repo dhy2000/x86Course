@@ -1,55 +1,55 @@
-name: Build PDF
+# name: Build PDF
 
-on:
-  push:
-    branches:
-      - master
+# on:
+#   push:
+#     branches:
+#       - master
 
-env:
-  title: x86汇编程序设计笔记
-  docs: "1-machine.md 2-address.md 3-instruction.md 4-program.md 5-string.md experiment.md"
+# env:
+#   title: x86汇编程序设计笔记
+#   docs: "1-machine.md 2-address.md 3-instruction.md 4-program.md 5-string.md experiment.md"
 
-jobs:
-  build_pdf:
-    name: Build PDF
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: setup chinese fonts
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ttf-mscorefonts-installer fontconfig
-          wget "https://github.com/adobe-fonts/source-han-sans/releases/download/2.004R/SourceHanSansCN.zip"
-          sudo mkdir -p /usr/share/fonts/adobe-source-han-sans/
-          unzip SourceHanSansCN.zip
-          sudo cp SubsetOTF/CN/* /usr/share/fonts/adobe-source-han-sans/
-          mkfontscale /usr/share/fonts/adobe-source-han-sans/
-          mkfontdir /usr/share/fonts/adobe-source-han-sans/
-          fc-cache -v -f /usr/share/fonts/adobe-source-han-sans/
-          fc-list :lang=zh-cn
-      - name: setup node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '17'
-      - name: install markdown-pdf
-        run: sudo npm install -g markdown-pdf
-      - name: convert doc to pdf
-        run: |
-          pids=()
-          docs="${{ env.docs }}"
-          for doc in $docs; do
-            pdf=`echo $doc | sed 's/.md/.pdf/g'`
-            markdown-pdf -o $pdf $doc -m '{"html":true}' &
-            pids+=($!)
-          done
-          for pid in ${pids[@]}; do
-            wait $pid
-          done
-      - name: conbine pdf
-        run: |
-          sudo apt-get install poppler-utils
-          find . -name '*.pdf' -type f | sort | sed '$a ${{ env.title }}.pdf' | xargs pdfunite
-      - uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.title }}
-          path: ${{ env.title }}.pdf
+# jobs:
+#   build_pdf:
+#     name: Build PDF
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v2
+#       - name: setup chinese fonts
+#         run: |
+#           sudo apt-get update
+#           sudo apt-get install -y ttf-mscorefonts-installer fontconfig
+#           wget "https://github.com/adobe-fonts/source-han-sans/releases/download/2.004R/SourceHanSansCN.zip"
+#           sudo mkdir -p /usr/share/fonts/adobe-source-han-sans/
+#           unzip SourceHanSansCN.zip
+#           sudo cp SubsetOTF/CN/* /usr/share/fonts/adobe-source-han-sans/
+#           mkfontscale /usr/share/fonts/adobe-source-han-sans/
+#           mkfontdir /usr/share/fonts/adobe-source-han-sans/
+#           fc-cache -v -f /usr/share/fonts/adobe-source-han-sans/
+#           fc-list :lang=zh-cn
+#       - name: setup node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: '17'
+#       - name: install markdown-pdf
+#         run: sudo npm install -g markdown-pdf
+#       - name: convert doc to pdf
+#         run: |
+#           pids=()
+#           docs="${{ env.docs }}"
+#           for doc in $docs; do
+#             pdf=`echo $doc | sed 's/.md/.pdf/g'`
+#             markdown-pdf -o $pdf $doc -m '{"html":true}' &
+#             pids+=($!)
+#           done
+#           for pid in ${pids[@]}; do
+#             wait $pid
+#           done
+#       - name: conbine pdf
+#         run: |
+#           sudo apt-get install poppler-utils
+#           find . -name '*.pdf' -type f | sort | sed '$a ${{ env.title }}.pdf' | xargs pdfunite
+#       - uses: actions/upload-artifact@v3
+#         with:
+#           name: ${{ env.title }}
+#           path: ${{ env.title }}.pdf
